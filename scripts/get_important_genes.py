@@ -6,6 +6,7 @@ import scipy.io
 import cvxpy as cp
 import os
 import sys
+
 module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
@@ -49,19 +50,19 @@ lam = cp.Parameter(nonneg=True)
 lams = np.logspace(-6, -1)
 
 # set up eqs for correlation matrix
-#D = np.diag( np.sqrt( np.mean((exp - np.mean(exp, axis=0))**2, axis=0) ) )
+# D = np.diag( np.sqrt( np.mean((exp - np.mean(exp, axis=0))**2, axis=0) ) )
 X = cp.multiply(exp.T, b)
-mu = cp.reshape(cp.sum(X, axis=0)/m, (n, 1)).T
-D = cp.diag(cp.sqrt(cp.sum((X - mu)**2, axis=0)/m))
-C = np.eye(m) - (1/m)*mVec*mVec.T
-Xs = C @ X @ D**-1
+mu = cp.reshape(cp.sum(X, axis=0) / m, (n, 1)).T
+D = cp.diag(cp.sqrt(cp.sum((X - mu) ** 2, axis=0) / m))
+C = np.eye(m) - (1 / m) * mVec * mVec.T
+Xs = C @ X @ D ** -1
 
 # constraints
-constraints = [b <= 1, lam <= 1, B == (1/m)*Xs.T @ Xs]
+constraints = [b <= 1, lam <= 1, B == (1 / m) * Xs.T @ Xs]
 
 # Form objective.
 error = cp.norm2(B - A)
-obj = cp.Minimize(error + lam*cp.norm1(b))
+obj = cp.Minimize(error + lam * cp.norm1(b))
 
 # Form and solve problem.
 prob = cp.Problem(obj, constraints)
@@ -79,10 +80,10 @@ for val in lams:
 
 prob.status
 
-
-
 # try with scipy
 lams = np.logspace(1, 6)
-x0 = np.ones((m, 1))*0.1
-res = minimize(opt_genes, x0.T, args=(100, exp, A))
-
+# make array of starting conditions
+x0 = np.ones((m, 1)) * 0.1
+idx = np.random.choice(list(range(m)), 5000)
+x0[idx, :] = 0
+res = minimize(opt_genes, x0, args=(100, exp, A), constraints=({'type': 'ineq', "fun": lambda x: 1 - x}), tol=1e-6)

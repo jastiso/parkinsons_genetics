@@ -12,7 +12,7 @@ def opt_genes(b, lam, X, A):
     :param A: co-expression matrix
     :return: the loss for this value of b and lam
     """
-    B = np.corrcoef(X * b)
+    B = np.corrcoef(X * b.T)
     err = np.linalg.norm(A - B)
     return err + (lam * np.linalg.norm(b, ord=1))
 
