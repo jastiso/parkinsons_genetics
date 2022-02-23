@@ -6,6 +6,7 @@ import scipy.io
 import cvxpy as cp
 import os
 import sys
+import pickle
 
 module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
@@ -86,4 +87,7 @@ lams = np.logspace(1, 6)
 x0 = np.ones((m, 1)) * 0.1
 idx = np.random.choice(list(range(m)), 5000)
 x0[idx, :] = 0
-res = minimize(opt_genes, x0, args=(100, exp, A), constraints=({'type': 'ineq', "fun": lambda x: 1 - x}), tol=1e-6)
+res = minimize(opt_genes, x0, args=(1000, exp, A), constraints=({'type': 'ineq', "fun": lambda x: x}), tol=3)
+
+pickle.dump(res, "./data/subgrp_coexp/min_res.pkl")
+
