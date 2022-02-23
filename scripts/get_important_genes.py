@@ -42,45 +42,6 @@ mVec = np.ones((m, 1))
 #  plus an l1 penalty to promote sparsity on b. That is, something like
 #     Phi(b) = ||B(b)-A||_2 + lambda||b||_1
 
-# Create two scalar optimization variables.
-b = cp.Variable((m, 1), nonneg=True)
-B = cp.Variable((n, n), PSD=True)
-
-# set lambda
-lam = cp.Parameter(nonneg=True)
-lams = np.logspace(-6, -1)
-
-# set up eqs for correlation matrix
-# D = np.diag( np.sqrt( np.mean((exp - np.mean(exp, axis=0))**2, axis=0) ) )
-X = cp.multiply(exp.T, b)
-mu = cp.reshape(cp.sum(X, axis=0) / m, (n, 1)).T
-D = cp.diag(cp.sqrt(cp.sum((X - mu) ** 2, axis=0) / m))
-C = np.eye(m) - (1 / m) * mVec * mVec.T
-Xs = C @ X @ D ** -1
-
-# constraints
-constraints = [b <= 1, lam <= 1, B == (1 / m) * Xs.T @ Xs]
-
-# Form objective.
-error = cp.norm2(B - A)
-obj = cp.Minimize(error + lam * cp.norm1(b))
-
-# Form and solve problem.
-prob = cp.Problem(obj, constraints)
-sq_penalty = []
-l1_penalty = []
-b_values = []
-for val in lams:
-    lam.value = val
-    prob.solve()
-    # Use expr.value to get the numerical value of
-    # an expression in the problem.
-    sq_penalty.append(error.value)
-    l1_penalty.append(cp.norm(b, 1).value)
-    b_values.append(b.value)
-
-prob.status
-
 # try with scipy
 lams = np.logspace(1, 6)
 # make array of starting conditions
